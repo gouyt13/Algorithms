@@ -1,10 +1,10 @@
 from heapq import heappop, heappush
 from collections import defaultdict
-import os 
+import os
 import sys
 
-
-NUM_NODES = 9 
+sys.setrecursionlimit(1000000)
+NUM_NODES = 875714
 
 
 def create_graph():
@@ -50,6 +50,7 @@ def DFS_Loop1(graph_rev):
         t += 1 
         # use t as key, more convenient to use graph 
         finishing_time[t] = i 
+        return 
     
     for i in range(NUM_NODES, 0, -1):
         if node_flag[i-1] == False:
@@ -75,6 +76,7 @@ def DFS_Loop2(graph, finishing_time):
             if node_flag[j-1] == False:
                 DFS(graph, j)
         num += 1
+        return 
 
     for i in range(NUM_NODES, 0, -1):
         node = finishing_time[i]
@@ -82,7 +84,6 @@ def DFS_Loop2(graph, finishing_time):
         if node_flag[node-1] == False:
             DFS(graph, node)
         top5(res, num)
-
     return res 
 
 
