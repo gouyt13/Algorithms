@@ -18,6 +18,9 @@ So if your answer is 1198233847, then just type 1198233847 in the space provided
 [TIP: before submitting, first test the correctness of your program on some small test files or your own devising.  Then post your best test cases to the discussion forums to help your fellow students!]
 """
 
+import os 
+import sys 
+
 counts = 0
 
 def mergeSort(array):
@@ -73,7 +76,11 @@ def reversePairs(nums):
     return count
 
 if __name__ == '__main__':
-    with open('IntegerArray.txt') as f:
+    py_path = sys.argv[0]
+    py_dir = os.path.dirname(py_path)
+    filename = 'IntegerArray.txt'
+    filepath = os.path.join(py_dir, filename)
+    with open(filepath) as f:
         array = [int(i.strip()) for i in f.readlines()]
     mergeSort(array)
     print(counts)
