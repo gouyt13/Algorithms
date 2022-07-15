@@ -1,105 +1,117 @@
-from heapq import heappop, heappush
-from collections import defaultdict
-import os
+import collections
+from glob import glob
 import sys
-
-sys.setrecursionlimit(1000000)
-NUM_NODES = 875714
+import os
 
 
-def create_graph():
-    """
-    create graph and arc_reversed graph 
-    """
-    py_path = sys.argv[0]
-    py_dir = os.path.dirname(py_path)
-    filename = 'SCC.txt'
-    filepath = os.path.join(py_dir, filename)
-
-    # graph and arc-reversed graph
-    graph = defaultdict(list)
-    graph_rev = defaultdict(list)
-
-    with open(filepath) as f:
-        for line in f.readlines():
-            if line:
-                tail, head = line.strip().split()
-                tail, head = int(tail), int(head)
-                graph[tail-1].append(head)
-                graph_rev[head-1].append(tail)
-    return graph, graph_rev  
 
 
-def DFS_Loop1(graph_rev):
-    """
-    the second step of Kosaraju's Two-Pass Algorithm
-    calculate finishing times on the G-rev
-    """
+def createGraph(filename):
+    edges = []
+    for l in open(filename):
+        fields = [int(f) for f in l.split()]
+        edges.append(tuple(fields))
+
+    graph = collections.defaultdict(list)
+    reversed_graph = collections.defaultdict(list)
+    for e in edges:
+        graph[e[0]] = graph[e[0]] + [e]
+        reversed_graph[e[1]] = reversed_graph[e[1]] + [(e[1], e[0])]
+
+    return graph, reversed_graph, edges
+
+
+t = 0
+s = 0
+finishing = {}
+leader = {}
+explored = collections.defaultdict(int)
+
+
+def paraReset():
+    global t, s, finishing, leader, explored
     t = 0
-    node_flag = [False] * NUM_NODES
-    finishing_time = dict()
-
-    def DFS(graph_rev, i):
-        nonlocal node_flag
-        nonlocal finishing_time
-        nonlocal t 
-        node_flag[i-1] = True 
-        for j in graph_rev[i-1]:
-            if node_flag[j-1] == False:
-                DFS(graph_rev, j)
-        t += 1 
-        # use t as key, more convenient to use graph 
-        finishing_time[t] = i 
-        return 
-    
-    for i in range(NUM_NODES, 0, -1):
-        if node_flag[i-1] == False:
-            DFS(graph_rev, i)
-    
-    # print(finishing_time)
-    return finishing_time  
+    s = 0
+    finishing = {}
+    leader = {}
+    explored = collections.defaultdict(int)
 
 
-def DFS_Loop2(graph, finishing_time):
-    """
-    use finishing time to find SCCs on the graph 
-    record the size of SCC
-    """
-    node_flag = [False] * NUM_NODES
-    res = [0, 0, 0, 0, 0]
-
-    def DFS(graph, i):
-        nonlocal num 
-        nonlocal node_flag
-        node_flag[i-1] = True 
-        for j in graph[i-1]:
-            if node_flag[j-1] == False:
-                DFS(graph, j)
-        num += 1
-        return 
-
-    for i in range(NUM_NODES, 0, -1):
-        node = finishing_time[i]
-        num = 0 # the size of SCC 
-        if node_flag[node-1] == False:
-            DFS(graph, node)
-        top5(res, num)
-    return res 
+def DFSLoop(labeling, reversed=False):
+    global s
+    for i in labeling:
+        if not explored[i]:
+            s = i
+            DFS(i, reversed)
 
 
-def top5(res, cur):
-    # use heap to record top 5 of the sizes 
-    temp = heappop(res)
-    if temp < cur:
-        heappush(res, cur)
+forward_graph = {}
+reversed_graph = {}
+
+
+def DFS(start, reversed=False):
+    global t
+    global reversed_graph
+    global forward_graph
+    if reversed:
+        graph = reversed_graph
     else:
-        heappush(res, temp)
+        graph = forward_graph
+
+    # Iterative (i.e. manually managing a stack) solution.
+    stack = []
+    stack.append((start, 1))
+
+    while len(stack) > 0:
+        current, phase = stack.pop()
+        if phase == 1:
+            explored[current] = 1
+            leader[current] = s
+            edge_found = False
+            for edge in graph[current]:
+                if not explored[edge[1]]:
+                    stack.append((current, 1))
+                    stack.append((edge[1], 1))
+                    edge_found = True
+                    break
+            if not edge_found:
+                stack.append((current, 2))
+        if phase == 2:
+            t += 1
+            finishing[current] = t
 
 
 
+py_path = sys.argv[0]
+py_dir = os.path.dirname(py_path)
+filename = "SCC.txt"
+filepath = os.path.join(py_dir, filename)
+forward_graph, reversed_graph, edges = createGraph(filepath)
 
-if __name__ == '__main__':
-    graph, graph_rev = create_graph()
-    finishing_time = DFS_Loop1(graph_rev)
-    res = DFS_Loop2(graph, finishing_time)
-    print(sorted(res, reverse=True))
+print("Graph parsed")
+
+num_nodes = max([e[0] for e in edges] + [e[1] for e in edges])
+labeling = range(num_nodes, 0, -1)
+DFSLoop(labeling, True)
+
+print("Reverse DFSLoop done")
+
+inverse_finishing = dict((v, k) for k, v in finishing.items())
+finish_labeling = [inverse_finishing[i] for i in range(num_nodes, 0, -1)]
+
+paraReset()
+DFSLoop(finish_labeling)
+
+print("Forward DFSLoop done")
+
+sccs = {}
+for i in leader:
+    if leader[i] not in sccs:
+        sccs[leader[i]] = [i]
+    else:
+        sccs[leader[i]].append(i)
+
+
+a = [len(sccs[i]) for i in sccs]
+a.sort(reverse=True)
+print(a[:5])
