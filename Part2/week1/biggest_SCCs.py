@@ -1,8 +1,6 @@
 import collections
-from glob import glob
 import sys
 import os
-
 
 
 
@@ -39,6 +37,7 @@ def paraReset():
 
 def DFSLoop(labeling, reversed=False):
     global s
+    global explored
     for i in labeling:
         if not explored[i]:
             s = i
@@ -53,10 +52,12 @@ def DFS(start, reversed=False):
     global t
     global reversed_graph
     global forward_graph
+    global leader 
     if reversed:
         graph = reversed_graph
     else:
         graph = forward_graph
+    
 
     # Iterative (i.e. manually managing a stack) solution.
     stack = []
@@ -79,7 +80,7 @@ def DFS(start, reversed=False):
         if phase == 2:
             t += 1
             finishing[current] = t
-
+    return 
 
 
 py_path = sys.argv[0]
@@ -88,9 +89,9 @@ filename = "SCC.txt"
 filepath = os.path.join(py_dir, filename)
 forward_graph, reversed_graph, edges = createGraph(filepath)
 
-print("Graph parsed")
+print("Graph created")
 
-num_nodes = max([e[0] for e in edges] + [e[1] for e in edges])
+num_nodes = 875714
 labeling = range(num_nodes, 0, -1)
 DFSLoop(labeling, True)
 
