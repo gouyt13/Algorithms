@@ -6,15 +6,16 @@ import os
 
 def createGraph(filename):
     edges = []
-    for l in open(filename):
-        fields = [int(f) for f in l.split()]
-        edges.append(tuple(fields))
+    with open(filename) as f:
+        for l in f.readlines():
+            fields = [int(f) for f in l.split()]
+            edges.append(tuple(fields))
 
-    graph = collections.defaultdict(list)
-    reversed_graph = collections.defaultdict(list)
-    for e in edges:
-        graph[e[0]] = graph[e[0]] + [e]
-        reversed_graph[e[1]] = reversed_graph[e[1]] + [(e[1], e[0])]
+        graph = collections.defaultdict(list)
+        reversed_graph = collections.defaultdict(list)
+        for e in edges:
+            graph[e[0]] = graph[e[0]] + [e]
+            reversed_graph[e[1]] = reversed_graph[e[1]] + [(e[1], e[0])]
 
     return graph, reversed_graph, edges
 
